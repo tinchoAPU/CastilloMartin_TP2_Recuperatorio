@@ -7,6 +7,8 @@ public class EnemyAI : MonoBehaviour
     [Header("Configuración de Referencias")]
     [SerializeField] private Transform jugador;
     [SerializeField] private Transform[] puntosPatrulla;
+    [SerializeField] private short ataque = 20;
+
     private NavMeshAgent agente;
     private int indicePuntoActual = 0;
 
@@ -15,7 +17,6 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] private float radioAtaque = 2.5f;
     void Start()
     {
-        // Iniciar patrullaje yendo al primer punto
         agente = GetComponent<NavMeshAgent>();
 
         if (puntosPatrulla.Length > 0)
@@ -42,7 +43,6 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-
     void Patrullar()
     {
         if (puntosPatrulla.Length == 0) return;
@@ -63,7 +63,13 @@ public class EnemyAI : MonoBehaviour
     void Atacar()
     {
         agente.SetDestination(transform.position);
-        Debug.Log("El centinela te alcanzó y está atacando.");
+
+        // Intentamos obtener el script de salud del jugador y aplicarle daño
+        PlayerHealth salud = jugador.GetComponent<PlayerHealth>();
+        if (salud != null)
+        {
+            salud.RestarVida(ataque);
+        }
     }
 
     private void OnDrawGizmosSelected()
