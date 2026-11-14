@@ -2,10 +2,10 @@ using UnityEngine;
 
 public class PlayerInteraction : MonoBehaviour
 {
-
     [Header("Movimiento y Físicas")]
     [SerializeField] private float velocidad = 5f;
     [SerializeField] private float fuerzaSalto = 6f;
+    private float velocidadBase;
     private Rigidbody rb;
 
     [Header("Configuración de Capas")]
@@ -16,13 +16,12 @@ public class PlayerInteraction : MonoBehaviour
     [SerializeField] private float distanciaInteraccion = 3f;
     [SerializeField] private float distanciaSuelo = 1.1f;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        velocidadBase = velocidad;
     }
 
-    // Update is called once per frame
     void Update()
     {
         MoverJugador();
@@ -41,7 +40,6 @@ public class PlayerInteraction : MonoBehaviour
         rb.MovePosition(nuevaPosicion);
     }
 
-
     void ChequeoDeSalto()
     {
         bool enSuelo = Physics.Raycast(transform.position, Vector3.down, distanciaSuelo, capaSuelo);
@@ -53,7 +51,6 @@ public class PlayerInteraction : MonoBehaviour
         }
     }
 
-
     void InteraccionADistancia()
     {
         if (Input.GetKeyDown(KeyCode.E))
@@ -64,5 +61,15 @@ public class PlayerInteraction : MonoBehaviour
                 Debug.Log("Interactuando a distancia con: " + hit.collider.gameObject.name);
             }
         }
+    }
+
+    public void AplicarDesaceleracion(float multiplicador)
+    {
+        velocidad = velocidadBase * multiplicador;
+    }
+
+    public void RestaurarVelocidad()
+    {
+        velocidad = velocidadBase;
     }
 }
