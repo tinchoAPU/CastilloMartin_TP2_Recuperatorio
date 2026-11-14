@@ -7,7 +7,7 @@ public class EnemyAI : MonoBehaviour
     [Header("Configuración de Referencias")]
     [SerializeField] private Transform jugador;
     [SerializeField] private Transform[] puntosPatrulla;
-    [SerializeField] private short ataque = 20;
+    [SerializeField] private short ataque = 10;
 
     private NavMeshAgent agente;
     private int indicePuntoActual = 0;
