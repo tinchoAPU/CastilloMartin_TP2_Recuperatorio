@@ -22,6 +22,34 @@ public class PlayerHealth : MonoBehaviour
     private Collider col;
     private MeshRenderer mesh;
 
+    public bool EsInvisible { get; private set; }
+    public event Action<bool> OnInvisibilityChanged;
+
+    private Coroutine corrutinaInvisibilidad;
+
+    public void ActivarInvisibilidad(float duracion)
+    {
+        if (corrutinaInvisibilidad != null)
+        {
+            StopCoroutine(corrutinaInvisibilidad);
+        }
+        corrutinaInvisibilidad = StartCoroutine(ProcesoInvisibilidad(duracion));
+    }
+
+    private IEnumerator ProcesoInvisibilidad(float duracion)
+    {
+        EsInvisible = true;
+        OnInvisibilityChanged?.Invoke(true);
+        Debug.Log($"<color=cyan>¡Invisibilidad activada por {duracion} segundos!</color>");
+
+        yield return new WaitForSeconds(duracion);
+
+        EsInvisible = false;
+        corrutinaInvisibilidad = null;
+        OnInvisibilityChanged?.Invoke(false);
+        Debug.Log("<color=yellow>La invisibilidad ha terminado.</color>");
+    }
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();

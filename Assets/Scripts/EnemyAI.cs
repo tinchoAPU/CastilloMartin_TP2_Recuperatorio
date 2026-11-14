@@ -1,4 +1,3 @@
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -10,14 +9,21 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] private short ataque = 10;
 
     private NavMeshAgent agente;
+    private PlayerHealth saludJugador;
     private int indicePuntoActual = 0;
 
     [Header("Configuración de Rangos")]
     [SerializeField] private float radioDeteccion = 10f;
     [SerializeField] private float radioAtaque = 2.5f;
+
     void Start()
     {
         agente = GetComponent<NavMeshAgent>();
+
+        if (jugador != null)
+        {
+            saludJugador = jugador.GetComponentInParent<PlayerHealth>();
+        }
 
         if (puntosPatrulla.Length > 0)
         {
@@ -27,13 +33,16 @@ public class EnemyAI : MonoBehaviour
 
     void Update()
     {
+        if (jugador == null) return;
+
+        bool jugadorVisible = (saludJugador == null || !saludJugador.EsInvisible);
         float distanciaAlJugador = Vector3.Distance(transform.position, jugador.position);
 
-        if (distanciaAlJugador <= radioAtaque)
+        if (jugadorVisible && distanciaAlJugador <= radioAtaque)
         {
             Atacar();
         }
-        else if (distanciaAlJugador <= radioDeteccion)
+        else if (jugadorVisible && distanciaAlJugador <= radioDeteccion)
         {
             Perseguir();
         }
@@ -47,13 +56,13 @@ public class EnemyAI : MonoBehaviour
     {
         if (puntosPatrulla.Length == 0) return;
 
-        if (agente.remainingDistance < 0.5f && !agente.pathPending)
+        if (!agente.pathPending && agente.remainingDistance < 0.5f)
         {
             indicePuntoActual = (indicePuntoActual + 1) % puntosPatrulla.Length;
-            agente.SetDestination(puntosPatrulla[indicePuntoActual].position);
         }
-    }
 
+        agente.SetDestination(puntosPatrulla[indicePuntoActual].position);
+    }
 
     void Perseguir()
     {
@@ -64,11 +73,9 @@ public class EnemyAI : MonoBehaviour
     {
         agente.SetDestination(transform.position);
 
-        // Intentamos obtener el script de salud del jugador y aplicarle daño
-        PlayerHealth salud = jugador.GetComponent<PlayerHealth>();
-        if (salud != null)
+        if (saludJugador != null)
         {
-            salud.RestarVida(ataque);
+            saludJugador.RestarVida(ataque);
         }
     }
 
