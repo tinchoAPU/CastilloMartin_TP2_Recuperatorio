@@ -1,7 +1,5 @@
 using System;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.TextCore.Text;
 
 public enum GameState
 {
@@ -11,28 +9,28 @@ public enum GameState
     Victory,
     GameOver,
 }
+
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
-    //static
 
-
-    //settings
     [Header("State Settings")]
     [SerializeField] private GameState currentState;
     public GameState CurrentState => currentState;
 
-    [Header("Victory Settings")]
-    [SerializeField] private EnemyAI[] enemies;
-    [SerializeField] private int totalEnemies;
-    [SerializeField] private int enemiesRemaining;
+    [Header("Victory & Score Settings")]
+    [SerializeField] private int itemsToWin = 10;
+    [SerializeField] private int itemsCollected = 0;
+    [SerializeField] private int currentScore = 0;
 
+    public int ItemsToWin => itemsToWin;
+    public int ItemsCollected => itemsCollected;
+    public int CurrentScore => currentScore;
 
-    //eventos estado y cambio total enemigos
-
+    // Eventos listos para conectar el HUD (UIManager) más adelante
     public event Action<GameState> OnChangeState;
-
-    public event Action<int> OnEnemyChange;
+    public event Action<int, int> OnItemsChange; // (actuales, objetivo)
+    public event Action<int> OnScoreChange;      // (puntajeTotal)
 
     private void Awake()
     {
@@ -43,53 +41,51 @@ public class GameManager : MonoBehaviour
         else
         {
             Destroy(gameObject);
+            return;
         }
-        DontDestroyOnLoad(gameObject);//UI y escenas
+        DontDestroyOnLoad(gameObject);
     }
-    void Start()
-    {
-        //estados iniciales
-        //EnemyAI[] enemies = FindObjectsByType<EnemyAI>(FindObjectsSortMode.None);
-        totalEnemies = enemies.Length;
-        enemiesRemaining = totalEnemies;
 
-        OnEnemyChange?.Invoke(enemiesRemaining);
+    private void Start()
+    {
+        itemsCollected = 0;
+        currentScore = 0;
+
+        OnItemsChange?.Invoke(itemsCollected, itemsToWin);
+        OnScoreChange?.Invoke(currentScore);
         ChangeState(GameState.Playing);
     }
 
-    void Update()
+    private void Update()
     {
-        //pausa inputs
         if (Input.GetKeyDown(KeyCode.P))
         {
             Paused();
         }
     }
 
-
-    //switch estados
     public void ChangeState(GameState newState)
     {
         if (currentState == newState && newState != GameState.Playing) return;
         currentState = newState;
+
         switch (currentState)
         {
             case GameState.Start:
-                Time.timeScale = 1f;//0f - 1f
+                Time.timeScale = 1f;
                 Debug.Log("Inicio el juego");
                 break;
             case GameState.Playing:
                 Time.timeScale = 1f;
-                Debug.Log("<color=green>ESTADO: jugando</color>");
+                Debug.Log("<color=green>ESTADO: Jugando</color>");
                 break;
             case GameState.Paused:
                 Time.timeScale = 0f;
-                Debug.Log("<color=yellow>ESTADO: pausa</color>");
+                Debug.Log("<color=yellow>ESTADO: Pausa</color>");
                 break;
             case GameState.Victory:
                 Time.timeScale = 0f;
-                //corrutina para detener el tiempo
-                Debug.Log("<color=cyan>ESTADO: Victoria</color>");
+                Debug.Log("<color=cyan>ESTADO: Victoria - ¡Recolectaste todos los objetos!</color>");
                 break;
             case GameState.GameOver:
                 Time.timeScale = 0f;
@@ -100,7 +96,6 @@ public class GameManager : MonoBehaviour
         OnChangeState?.Invoke(currentState);
     }
 
-    //pausa
     public void Paused()
     {
         if (currentState == GameState.Playing)
@@ -113,9 +108,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    //lockmouse metodo
-
-    //notificaciones
+    // Notificaciones
     public void NotifyPlayerDead()
     {
         if (currentState != GameState.Playing) return;
@@ -123,19 +116,21 @@ public class GameManager : MonoBehaviour
         ChangeState(GameState.GameOver);
     }
 
-    public void NotifyEnemyDefeat()
+    public void NotifyItemCollected(int cantidad = 1, int puntos = 10)
     {
         if (currentState != GameState.Playing) return;
 
-        enemiesRemaining--;
+        itemsCollected += cantidad;
+        currentScore += puntos;
 
-        OnEnemyChange?.Invoke(enemiesRemaining);
+        Debug.Log($"Monedas: {itemsCollected}/{itemsToWin} | Puntos: {currentScore}");
 
-        if (enemiesRemaining <= 0)
+        OnItemsChange?.Invoke(itemsCollected, itemsToWin);
+        OnScoreChange?.Invoke(currentScore);
+
+        if (itemsCollected >= itemsToWin)
         {
             ChangeState(GameState.Victory);
         }
     }
-
-
 }
