@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerHealth : MonoBehaviour
@@ -13,6 +15,13 @@ public class PlayerHealth : MonoBehaviour
 
     [Header("Puntuación")]
     private int puntuacionTotal = 0;
+
+    private Rigidbody rb;
+    private Collider col;
+
+    private MeshRenderer mesh;
+
+
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -46,7 +55,21 @@ public class PlayerHealth : MonoBehaviour
         if (saludActual <= 0)
         {
             Debug.Log("El jugador ha sido derrotado.");
+
+            Dead();
         }
+    }
+
+
+    private void Dead()
+    {
+
+        if (gameObject.CompareTag("Player"))
+        {
+            GameManager.Instance.NotifyPlayerDead();
+        }
+
+        //StartCoroutine(DestroyTransition());
     }
 
     public void SumarPuntos(int puntos)
@@ -54,4 +77,18 @@ public class PlayerHealth : MonoBehaviour
         puntuacionTotal += puntos;
         Debug.Log("Ítem recogido. Puntuación: " + puntuacionTotal);
     }
+
+
+    IEnumerator DestroyTransition()
+    {
+        col.enabled = false;
+        rb.isKinematic = true;
+        mesh.enabled = false;
+
+        yield return new WaitForSeconds(5f);
+
+        Destroy(this.gameObject);
+
+    }
+
 }
